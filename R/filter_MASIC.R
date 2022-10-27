@@ -9,7 +9,7 @@
 #'
 #' @return A filtered object of the masic data class
 interference_filter <- function(masic,
-                                interference_score_threshold = 0.5,
+                                interference_score_threshold = 0.9,
                                 remove_all_missing = TRUE) {
 
   ##################

@@ -36,6 +36,8 @@ class(masic) <- c(class(masic), "masic_data")
 # Filter masic data
 masic_filtered <- interference_filter(masic, 0.9, TRUE)
 
-
+#############################
+## Generate pmartR Objects ##
+#############################
 
 
