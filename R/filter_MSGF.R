@@ -115,6 +115,10 @@ decoy_filter <- function(msnid) {
   ## RETURN RESULT ##
   ###################
 
-  return(MSnID::apply_filter(msnid, "isDecoy == FALSE"))
+  # Apply and track filter
+  filtApplied <- MSnID::apply_filter(msnid, "isDecoy == FALSE")
+  attr(filtApplied, "TMTPipeline")$DecoyFiltered <- TRUE
+
+  return(filtApplied)
 
 }
