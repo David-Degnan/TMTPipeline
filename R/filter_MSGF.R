@@ -76,29 +76,45 @@ fdr_filter <- function(msnid,
                                 level=level,
                                 n.iter=n.iter.nm)
 
-  return(apply_filter(msnid, filtObj.nm))
+  # Apply the filter
+  filtApplied <- apply_filter(msnid, filtObj.nm)
+
+  # Add an attributes
+  attr(filtApplied, "TMTPipeline")$FDRFiltered <- TRUE
+
+  return(filtApplied)
 
 }
 
 
-#' Filtering MSGF Data: https://github.com/vladpetyuk/PlexedPiper/blob/master/R/filter_msgf_data.R
+#' Remove decoys
 #'
-#' Filtering MSGF data. In this implementation the peptide level filter optimizes both ppm and
-#' PepQValue thresholds to achieve maximum number of peptide identifications within
-#' the given FDR constraints.
+#' Filtering decoys from an msnid object AFTER the FDR filter has been applied.
 #'
 #' @param msnid (MSnID object) collated MSGF output. Required.
-#' @param level (character) Level at which to perform FDR filter. Options are peptide and accession (protein). Default is peptide.
-#' @param fdr.max (numeric) Maximum acceptable FDR rate. Default is 0.01.
-#' @param n.iter.grid (numeric) Bumber of grid-distributed evaluation points. Default 500.
-#' @param n.iter.nm (numeric) Number of iterations for Nelder-Mead optimization algorithm. Default is 100.
 #' @return (MSnID object) Filtered MSGF output
 #'
-#' @importFrom MSnID MSnIDFilter MSnIDFilter optimize_filter mass_measurement_error apply_filter
 #' @export
-remove_decoys <- function(msnid) {
+decoy_filter <- function(msnid) {
 
-  return(NULL)
+  ####################
+  ## INPUT CHECKING ##
+  ####################
 
+  # Input should be msnid object
+  if (!inherits(msnid, "MSnID")) {
+    stop("msnid should be a MSnID object.")
+  }
+
+  # Data should be already FDR filtered
+  if (is.null(attr(msnid, "TMTPipeline")$FDRFiltered)) {
+    stop("Run the fdr_filter first.")
+  }
+
+  ###################
+  ## RETURN RESULT ##
+  ###################
+
+  return(MSnID::apply_filter(msnid, "isDecoy == FALSE"))
 
 }
