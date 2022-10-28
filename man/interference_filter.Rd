@@ -6,7 +6,7 @@
 \usage{
 interference_filter(
   masic,
-  interference_score_threshold = 0.9,
+  interference_score_threshold = 0.5,
   remove_all_missing = TRUE
 )
 }

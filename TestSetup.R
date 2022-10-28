@@ -13,18 +13,9 @@ msnid
 msgf_filtered <- fdr_filter(msnid)
 msgf_filtered
 
-# Apply the fdr filtering to built object
-msnid_built
-built_filtered <- fdr_filter(msnid_built)
-built_filtered
-
 # Apply the decoy filtering
 msgf_nodecoy <- decoy_filter(msgf_filtered)
 msgf_nodecoy
-
-# Apply the decoy filtering to built object
-built_nodecoy <- decoy_filter(built_filtered)
-built_nodecoy
 
 #####################
 ## MASIC Filtering ##
@@ -86,5 +77,5 @@ f_data <- create_f_data(
   )
 )
 
-e_data <- create_e_data(masic_filtered, msgf_nodecoy, f_data)
+e_objects <- create_e_objects(masic_filtered, msgf_nodecoy, f_data)
 

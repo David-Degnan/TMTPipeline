@@ -141,7 +141,8 @@ create_e_objects <- function(masic,
       Contaminant = purrr::map2(data, Protein, function(x, y) {
         ifelse(y %in% x$ContaminantName, ifelse(y %in% x$ProteinName, "Potential", "Yes"), "No")}) %>% unlist()
     ) %>%
-    dplyr::select(-data)
+    dplyr::select(-data) %>%
+    dplyr::rename(PlexNames = Dataset)
 
   # Create the e_meta object
   e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")]
@@ -151,10 +152,16 @@ create_e_objects <- function(masic,
   browser()
 
   # Create the e_data object
-  masic %>%
-    dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames))
+  e_data <- masic %>%
+    dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames)) %>%
+    tidyr::pivot_longer(f_data$IonChannelNames) %>%
+    dplyr::rename(PlexNames = Dataset, IonChannelNames = name) %>%
+    dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
+    dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide")], by = c("PlexNames", "ScanNumber")) %>%
+    dplyr::select(-c(PlexNames, ScanNumber, IonChannelNames))
 
-
+  e_data <- e_data %>%
+    tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
 
 
