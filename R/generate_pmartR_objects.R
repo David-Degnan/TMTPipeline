@@ -1,4 +1,4 @@
-#' Generate an f_data (sample information object) from masic data and a metadata file
+#' Create an f_data (sample information object) from masic data and a metadata file
 #'
 #' @param masic A masic_data object that has been filtered by intereference_filter. Required.
 #' @param metadata A data frame with the PlexNames, IonChannelNames, SampleName,
@@ -8,8 +8,8 @@
 #'
 #' @return A pmartR f_data (sample information) object
 #' @export
-generate_f_data <- function(masic,
-                            metadata) {
+create_f_data <- function(masic,
+                          metadata) {
 
   ##################
   ## CHECK INPUTS ##
@@ -67,3 +67,97 @@ generate_f_data <- function(masic,
   return(f_data)
 
 }
+
+#' Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from masic data, msnid, and f_data
+#'
+#' @param masic A masic_data object that has been filtered by intereference_filter. Required.
+#' @param msnid An msnid object that has been fdr and decoy filtered. Required.
+#' @param f_data An f_data object from create_f_data. Required.
+#'
+#' @return A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object
+#' @export
+create_e_objects <- function(masic,
+                            msnid,
+                            f_data) {
+
+  ##################
+  ## CHECK INPUTS ##
+  ##################
+
+  # masic data should be a masic data object
+  if (!inherits(masic, "masic_data")) {
+    stop("A masic_data object is required.")
+  }
+
+  # masic data is suggested to be interference filtered
+  if (is.null(attr(masic, "TMTPipeline")$InterferenceFiltered)) {
+    message("Applying an intereference filter is recommended before building pmartR objects")
+  }
+
+  # Input should be an msnid object
+  if (!inherits(msnid, "MSnID")) {
+    stop("msnid should be a MSnID object.")
+  }
+
+  # msnid should already be FDR filtered
+  if (is.null(attr(msnid, "TMTPipeline")$FDRFiltered)) {
+    stop("Run the fdr_filter on the msnid data first.")
+  }
+
+  # msnid should already be decoy filtered
+  if (is.null(attr(msnid, "TMTPipeline")$DecoyFiltered)) {
+    stop("Run the decoy_filter on the msnid data first.")
+  }
+
+  # f_data should have been created with the appropriate function
+  if (is.null(attr(f_data, "valid_f_data"))) {
+    stop("f_data should be created with create_f_data.")
+  }
+
+  #############################
+  ## BUILD THE E_DATA OBJECT ##
+  #############################
+
+  # Pull the peptide identifications. Select only the required columns for pmartR.
+  # Get the protein and contaminant names. If the protein matches the contaminant
+  # name only, it is a contaminant. If it matches both the contaminant and protein
+  # names, it is potentially a contaminant. Otherwise, it is not a contaminant.
+  psm_data <- MSnID::psms(msnid) %>%
+    dplyr::select(Dataset, Scan, peptide, Protein) %>%
+    dplyr::rename(ScanNumber = Scan, Peptide = peptide) %>%
+    dplyr::mutate(
+      ContaminantName = ifelse(grepl("Contaminant", Protein), gsub("Contaminant_", "", Protein), NA),
+      ProteinName = purrr::map(Protein, function(x) {
+        ifelse(grepl("Contaminant_", x), NA, strsplit(x, "|", fixed = T) %>% unlist() %>% tail(1))
+      }) %>% unlist()
+    ) %>%
+    dplyr::group_by(Dataset, ScanNumber, Peptide) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      Protein = purrr::map(data, function(x) {x[,2:3] %>% unlist() %>% unique() %>% .[!is.na(.)]}),
+    ) %>%
+    tidyr::separate_rows(Protein, sep = ",") %>%
+    dplyr::mutate(
+      Contaminant = purrr::map2(data, Protein, function(x, y) {
+        ifelse(y %in% x$ContaminantName, ifelse(y %in% x$ProteinName, "Potential", "Yes"), "No")}) %>% unlist()
+    ) %>%
+    dplyr::select(-data)
+
+  # Create the e_meta object
+  e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")]
+
+  class(masic) <- c("data.table", "data.frame")
+
+  browser()
+
+  # Create the e_data object
+  masic %>%
+    dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames))
+
+
+
+
+
+
+}
+

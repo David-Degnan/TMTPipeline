@@ -40,7 +40,7 @@ masic_filtered <- interference_filter(masic, 0.9, TRUE)
 ## Generate pmartR Objects ##
 #############################
 
-f_data <- generate_f_data(
+f_data <- create_f_data(
   masic_filtered,
   metadata = data.frame(
     "PlexNames" = rep(unique(masic$Dataset) %>% sort(), 16),
@@ -86,4 +86,5 @@ f_data <- generate_f_data(
   )
 )
 
+e_data <- create_e_data(masic_filtered, msgf_nodecoy, f_data)
 
