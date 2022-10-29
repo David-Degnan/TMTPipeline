@@ -143,27 +143,34 @@ create_e_objects <- function(masic,
       }) %>% unlist()
     ) %>%
     dplyr::select(-data) %>%
-    dplyr::rename(PlexName = Dataset)
+    dplyr::rename(PlexNames = Dataset)
 
   # Generate the emeta object
   e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")] %>% unique()
 
   class(masic) <- c("data.table", "data.frame")
 
-  # Create the e_data object
+  # Create the e_data object by combining the masic data, peptide spectrum matches,
+  # and the f_data. It is definitely possible for their to be multiple peptide
+  # identifications in a sample. For now, return the maximum value.
   e_data <- masic %>%
     dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames)) %>%
     tidyr::pivot_longer(f_data$IonChannelNames) %>%
     dplyr::rename(PlexNames = Dataset, IonChannelNames = name) %>%
+    dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide", "Protein")], by = c("PlexNames", "ScanNumber")) %>%
     dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
-    dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide")], by = c("PlexNames", "ScanNumber")) %>%
-    dplyr::select(-c(PlexNames, ScanNumber, IonChannelNames))
-
-  e_data <- e_data %>%
+    dplyr::group_by(SampleNames, Peptide) %>%
+    dplyr::summarise(value = max(value)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
+  e_data[is.na(e_data)] <- 0
 
+  # Filter e_meta to identified peptides
+  e_meta <- e_meta[e_meta$Peptide %in% e_data$Peptide,] %>% dplyr::ungroup()
 
+  # Return objects
+  return(list(data.frame(e_data),
+              data.frame(e_meta)))
 
 }
 

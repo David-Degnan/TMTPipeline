@@ -79,3 +79,20 @@ f_data <- create_f_data(
 
 e_objects <- create_e_objects(masic_filtered, msgf_nodecoy, f_data)
 
+e_data <- e_objects[[1]]
+e_meta <- e_objects[[2]]
+
+# Clean f_data in this case
+f_data$SampleNames <- paste0("X", f_data$SampleNames)
+
+test <- pmartR::as.isobaricpepData(
+  e_data = e_data,
+  f_data = f_data,
+  e_meta = e_meta,
+  edata_cname = "Peptide",
+  fdata_cname = "SampleNames",
+  emeta_cname = "Protein"
+)
+
+
+
