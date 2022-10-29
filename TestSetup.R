@@ -60,6 +60,55 @@ f_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv
 f_data$SampleNames <- paste0("X", f_data$SampleNames)
 write.csv(f_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv", quote = F, row.names = F)
 
+e_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_data.csv")
+e_meta <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_meta.csv")
+
+pmartR::as.isobaricpepData(
+  e_data, f_data, e_meta, "Peptide", "SampleNames", "Protein"
+)
+
+#######################
+## DATA PACKAGE 4005 ##
+#######################
+
+# Load files
+msnid <- readRDS("~/Desktop/OldProjects/TMT/4005_Tafess_LI/4005_Data_Package.RDS")$msnid
+masic <- readRDS("~/Desktop/OldProjects/TMT/4005_Tafess_LI/4005_Data_Package.RDS")$masic
+class(masic) <- c(class(masic), "masic_data")
+
+metadata = data.frame(
+  "PlexNames" = unique(masic$Dataset)[1:12],
+  "IonChannelNames" = c(colnames(masic)[3:13], NA),
+  "SampleNames" = c("Taffesse_LI_Mock_1",
+                    "Taffesse_LI_SarsCov2_1",
+                    "Taffesse_LI_Mock_2",
+                    "Taffesse_LI_Mock_3",
+                    "Taffesse_LI_SarsCov2_2",
+                    "Taffesse_LI_SarsCov2_3",
+                    "Taffesse_LI_Mock_4",
+                    "Taffesse_LI_SarsCov2_4",
+                    "Taffesse_LI_SarsCov2_5",
+                    "Taffesse_LI_Mock_5",
+                    "Reference",
+                    "")
+)
+write.csv(metadata, "~/Desktop/OldProjects/TMT/Results/DataPackage4005/metadata.csv", quote = F, row.names = F)
+
+# Run pipeline
+tmt_pipeline(msnid, masic, metadata, "~/Desktop/OldProjects/TMT/Results/DataPackage4005/")
+
+e_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4005/e_data.csv")
+e_meta <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4005/e_meta.csv")
+
+pmartR::as.isobaricpepData(
+  e_data, f_data, e_meta, "Peptide", "SampleNames", "Protein"
+)
+
+
+
+
+
+
 #######################
 ## DATA PACKAGE 4235 ##
 #######################
@@ -68,12 +117,6 @@ write.csv(f_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv"
 msnid <- readRDS("~/Desktop/OldProjects/TMT/4235_Tafesse/4235_Data_Package.RDS")$msnid
 masic <- readRDS("~/Desktop/OldProjects/TMT/4235_Tafesse/4235_Data_Package.RDS")$masic
 class(masic) <- c(class(masic), "masic_data")
-metadata = data.frame(
-  "PlexNames" = unique(masic$Dataset),
-  "IonChannelNames" =
 
-)
-
-vals <- xlsx::read.xlsx("~/Desktop/OldProjects/TMT/4235_Tafesse/Tafesse_Variant_Infection_metadata2.xlsx", 1)
 
 
