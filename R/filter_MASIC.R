@@ -5,6 +5,7 @@
 #'     The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.
 #' @param remove_all_missing A logical to indicate whether a dataset and scan number
 #'     where there is no intensity/abundance at any ion intensity should be removed.
+#'     Default is TRUE.
 #' @importFrom dplyr %>%
 #'
 #' @return A filtered object of the masic data class
