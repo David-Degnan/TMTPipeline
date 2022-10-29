@@ -1,3 +1,4 @@
+library(dplyr)
 library(devtools)
 load_all(".")
 
@@ -10,7 +11,7 @@ msnid <- readRDS("~/Desktop/OldProjects/TMT/4234_Tafesse/4234_Data_Package.RDS")
 masic <- readRDS("~/Desktop/OldProjects/TMT/4234_Tafesse/4234_Data_Package.RDS")$masic
 class(masic) <- c(class(masic), "masic_data")
 metadata = data.frame(
-  "PlexNames" = rep(unique(masic$Dataset) %>% sort(), 16),
+  "PlexNames" = rep(unique(masic$Dataset) %>% sort(), each = 16),
   "IonChannelNames" = rep(colnames(masic)[3:18], 9),
   "SampleNames" = c(
     "78679_EBC_B1_122_3", "78679_EBC_B1_081_6", "78679_EBC_B1_055_3", "78679_EBC_B1_055_5",
@@ -51,11 +52,28 @@ metadata = data.frame(
   ),
   Type = rep(c(rep("Sample", 15), "Reference"), 9)
 )
+write.csv(metadata, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/metadata.csv", quote = F, row.names = F)
 
 # Run pipeline
 tmt_pipeline(msnid, masic, metadata, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/")
 f_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv")
 f_data$SampleNames <- paste0("X", f_data$SampleNames)
 write.csv(f_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv", quote = F, row.names = F)
+
+#######################
+## DATA PACKAGE 4235 ##
+#######################
+
+# Load files
+msnid <- readRDS("~/Desktop/OldProjects/TMT/4235_Tafesse/4235_Data_Package.RDS")$msnid
+masic <- readRDS("~/Desktop/OldProjects/TMT/4235_Tafesse/4235_Data_Package.RDS")$masic
+class(masic) <- c(class(masic), "masic_data")
+metadata = data.frame(
+  "PlexNames" = unique(masic$Dataset),
+  "IonChannelNames" =
+
+)
+
+vals <- xlsx::read.xlsx("~/Desktop/OldProjects/TMT/4235_Tafesse/Tafesse_Variant_Infection_metadata2.xlsx", 1)
 
 
