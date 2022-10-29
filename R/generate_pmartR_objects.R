@@ -134,22 +134,21 @@ create_e_objects <- function(masic,
     dplyr::group_by(Dataset, ScanNumber, Peptide) %>%
     tidyr::nest() %>%
     dplyr::mutate(
-      Protein = purrr::map(data, function(x) {x[,2:3] %>% unlist() %>% unique() %>% .[!is.na(.)]}),
+      Protein = purrr::map(data, function(x) {x[,c("ContaminantName", "ProteinName")] %>% unlist() %>% unique() %>% .[!is.na(.)]}),
     ) %>%
-    tidyr::separate_rows(Protein, sep = ",") %>%
+    tidyr::unnest(Protein) %>%
     dplyr::mutate(
       Contaminant = purrr::map2(data, Protein, function(x, y) {
-        ifelse(y %in% x$ContaminantName, ifelse(y %in% x$ProteinName, "Potential", "Yes"), "No")}) %>% unlist()
+        ifelse(y %in% x$ContaminantName, ifelse(y %in% x$ProteinName, "Potential", "Yes"), "No")
+      }) %>% unlist()
     ) %>%
     dplyr::select(-data) %>%
-    dplyr::rename(PlexNames = Dataset)
+    dplyr::rename(PlexName = Dataset)
 
-  # Create the e_meta object
-  e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")]
+  # Generate the emeta object
+  e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")] %>% unique()
 
   class(masic) <- c("data.table", "data.frame")
-
-  browser()
 
   # Create the e_data object
   e_data <- masic %>%
