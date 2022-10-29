@@ -160,7 +160,7 @@ create_e_objects <- function(masic,
     dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide", "Protein")], by = c("PlexNames", "ScanNumber")) %>%
     dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
     dplyr::group_by(SampleNames, Peptide) %>%
-    dplyr::summarise(value = max(value)) %>%
+    dplyr::summarise(value = sum(value)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
   e_data[is.na(e_data)] <- 0
