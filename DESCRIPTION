@@ -2,12 +2,17 @@ Package: TMTPipeline
 Title: Collection of functions to run the TMTPipeline
 Version: 0.0.0.9000
 Authors@R: 
-    person("David", "Degnan", role = c("aut", "cre"))
+    person("David", "Degnan", email = "david.degnan@pnnl.gov", role = c("aut", "cre"))
 Description: For ease of use, this package collected functions necessary to run
     the TMT pipeline.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: BSD
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
-Remotes: github::vladpetyuk/MSnID
+Imports:
+    dplyr,
+    tidyr,
+    data.table,
+    purrr
+Remotes: 
+    vladpetyuk/MSnID

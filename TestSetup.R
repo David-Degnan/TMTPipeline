@@ -63,9 +63,11 @@ write.csv(f_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv"
 e_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_data.csv")
 e_meta <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_meta.csv")
 
-pmartR::as.isobaricpepData(
+isoPep <- pmartR::as.isobaricpepData(
   e_data, f_data, e_meta, "Peptide", "SampleNames", "Protein"
 )
+
+
 
 #######################
 ## DATA PACKAGE 4005 ##
