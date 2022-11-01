@@ -44,9 +44,9 @@ create_f_data <- function(masic,
   }
 
   # Let the user know if blanks were detect
-  if ("" %in% metadata$SampleNames) {
+  if ("" %in% metadata$SampleNames | any(is.na(metadata$SampleNames))) {
     message("Blanks detected in metadata. Those entries will be removed.")
-    metadata <- metadata[metadata$SampleNames != "",]
+    metadata <- metadata[metadata$SampleNames != "" & !is.na(metadata$SampleNames),]
   }
 
   # Assert that sample names are unique

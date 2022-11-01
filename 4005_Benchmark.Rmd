@@ -106,12 +106,69 @@ nrow(masic_filtered_new)
 **Old pipeline:**
 
 ```{r}
-fractions <- 
+fractions <- job_records %>% distinct(Dataset)
+fractions$PlexID <- "Plex1"
+fractions
+```
 
+```{r}
+samples <- data.frame("Plex1", 
+                      metadata[["Channel"]], 
+                      metadata[["SampleName"]])
+colnames(samples) <- c("PlexID", "ReporterName", "ReporterAlias")
+samples <- samples %>%
+  mutate(QuantBlock = 1)
+samples$MeasurementName <- metadata[["SampleName"]]
+samples$MeasurementName <- ifelse(samples$MeasurementName == "Reference", "DontUsePlease", samples$MeasurementName)
+samples
+```
+
+```{r}
+references <- samples %>%
+  distinct(PlexID, QuantBlock) %>%
+  mutate(Reference = 1)
+references
+```
+
+```{r}
 crosstab <- create_crosstab(msnid_decoy_old, masic_filtered_old,
                             aggregation_level = "peptide",
                             fractions, samples, references)
-
+theCross <- crosstab^2
+theCross[c("K.AASDIWKPVLSIDTEPR.K", "C.AFIQFATR.Q", "A.SFEPFSNK.G"),] %>%
+  data.frame()
 ```
+
+**New pipeline:**
+
+```{r}
+metadata2 <- metadata
+colnames(metadata2)[1:3] <- c("SampleNames", "PlexNames", "IonChannelNames")
+metadata2$PlexNames <- masic_data$Dataset %>% unique()
+metadata2$IonChannelNames <- c(colnames(masic_filtered_new)[c(3:13)], NA)
+f_data <- create_f_data(masic_filtered_new, metadata2)
+f_data
+```
+
+```{r}
+e_objects <- create_e_objects(masic_filtered_new, msnid_decoy_new, f_data)
+e_data <- e_objects[[1]]
+e_data[e_data$Peptide %in% c("K.AASDIWKPVLSIDTEPR.K", "C.AFIQFATR.Q", "A.SFEPFSNK.G"),]
+```
+
+#### Why are theses results *SO* different? 
+
+Let's start with C.AFIQFATR.Q
+
+Here are the peptide spectra matches in the msnid from the old pipeline: 
+
+```{r}
+psms(msnid_decoy_new)[psms(msnid_decoy_new)$peptide == "C.AFIQFATR.Q", 
+                      c("Dataset", "Scan", "peptide", "Protein")]
+```
+
+and the new: 
+
+
 
 
