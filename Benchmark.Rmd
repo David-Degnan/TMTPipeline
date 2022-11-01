@@ -132,6 +132,19 @@ Ori_isoRoll_4005 <- protein_quant(Ori_isoPep_4005, method = "rollup")
 datatable(Ori_isoRoll_4005$e_data, options = list(scrollX = T))
 ```
 
+The number of significant biomolecules is: 
+
+
+```{r}
+Ori_isoRoll_4005$f_data$Group <- c(NA, rep("Mock", 5), rep("Disease", 5))
+Ori_isoRoll_4005 <- group_designation(Ori_isoRoll_4005, main_effects = "Group")
+Ori_isoRoll_4005 <- applyFilt(imdanova_filter(Ori_isoRoll_4005), min_nonmiss_anova = 2, min_nonmiss_gtest = 3, 
+                              Ori_isoRoll_4005)
+Ori_isoStat_4005 <- imd_anova(Ori_isoRoll_4005, test_method = "anova")
+sum(Ori_isoStat_4005$Flag_A_Mock_vs_Disease != 0)
+```
+
+
 #### New Pipeline 
 
 The missingness in the 4005 masic file is: 
@@ -146,10 +159,9 @@ sum(masic_4005[,3:13] == 0 | is.na(masic_4005[,3:13])) / (nrow(masic_4005) * 11)
 
 ```{r}
 # Masic has different names for the same plex, which is not helpful 
-masic_4005$Dataset <- "Plex1"
 class(masic_4005) <- c(class(masic_4005), "masic_data")
 metadata_4005 = data.frame(
-  "PlexNames" = "Plex1",
+  "PlexNames" = unique(masic_4005$Dataset),
   "IonChannelNames" = c(colnames(masic_4005)[3:13], NA),
   "SampleNames" = c("Taffesse_LI_Mock_1",
                     "Taffesse_LI_SarsCov2_1",
@@ -176,4 +188,21 @@ isoPep_4005 <- as.isobaricpepData(e_data_4005, f_data_4005, e_meta_4005,
 summary(isoPep_4005)
 ```
 
+```{r}
+isoPep_4005 <- edata_transform(isoPep_4005, "log2")
+isoPep_4005$f_data$PlexNames <- "Plex1"
+isoNorm_4005 <- normalize_isobaric(isoPep_4005, apply_norm = T, exp_cname = "PlexNames", 
+                                   refpool_cname = "SampleNames", refpool_notation = "Reference")
+isoRoll_4005 <- protein_quant(isoPep_4005, method = "rollup")
+datatable(isoRoll_4005$e_data, options = list(scrollX = T))
+```
 
+```{r}
+isoRoll_4005$f_data$Group <- c("Mock", "Disease", "Mock", "Mock", "Disease", "Disease",
+                               "Mock", "Disease", "Disease", "Mock", NA)
+isoRoll_4005 <- group_designation(isoRoll_4005, main_effects = "Group")
+isoRoll_4005 <- applyFilt(imdanova_filter(isoRoll_4005), min_nonmiss_anova = 2, min_nonmiss_gtest = 3, 
+                              isoRoll_4005)
+isoStat_4005 <- imd_anova(isoRoll_4005, test_method = "anova")
+sum(isoStat_4005$Flag_A_Mock_vs_Disease != 0)
+```

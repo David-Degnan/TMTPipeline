@@ -118,6 +118,8 @@ create_e_objects <- function(masic,
   ## BUILD THE E_DATA OBJECT ##
   #############################
 
+  #browser()
+
   # Pull the peptide identifications. Select only the required columns for pmartR.
   # Get the protein and contaminant names. If the protein matches the contaminant
   # name only, it is a contaminant. If it matches both the contaminant and protein
@@ -160,7 +162,7 @@ create_e_objects <- function(masic,
     dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide", "Protein")], by = c("PlexNames", "ScanNumber")) %>%
     dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
     dplyr::group_by(SampleNames, Peptide) %>%
-    dplyr::summarise(value = sum(value)) %>%
+    dplyr::summarise(value = sum(value, na.rm = T)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
   e_data[is.na(e_data)] <- 0
