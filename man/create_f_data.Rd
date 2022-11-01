@@ -9,10 +9,9 @@ create_f_data(masic, metadata)
 \arguments{
 \item{masic}{A masic_data object that has been filtered by intereference_filter. Required.}
 
-\item{metadata}{A data frame with the PlexNames, IonChannelNames, SampleName,
-and any other metadata to end up in the f_data file. Know that PlexNames and
-IonChannelNames are used to find the data in the masic table, and Sample Name
-is what the column names will be in the final table. Required.}
+\item{metadata}{A data frame with the IonChannelNames, PlexNames, and SampleNames,
+and any other metadata to end up in the f_data file. SampleNames
+will be replace the IonChannelNames and PlexNames combinations.}
 }
 \value{
 A pmartR f_data (sample information) object

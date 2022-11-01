@@ -4,14 +4,18 @@
 \alias{create_e_objects}
 \title{Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from masic data, msnid, and f_data}
 \usage{
-create_e_objects(masic, msnid, f_data)
+create_e_objects(masic, msnid, f_data, plex_data)
 }
 \arguments{
 \item{masic}{A masic_data object that has been filtered by intereference_filter. Required.}
 
 \item{msnid}{An msnid object that has been fdr and decoy filtered. Required.}
 
-\item{f_data}{An f_data object from create_f_data. Required.}
+\item{f_data}{An f_data object from create_f_data. Contains at a minimum the
+SampleNames, PlexNames, and IonChannelNames. Required.}
+
+\item{plex_data}{Contains at a minimum the Dataset and PlexNames information. Both
+f_data and plex_data are mapped to their plex and ion channels for merging. Required.}
 }
 \value{
 A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object

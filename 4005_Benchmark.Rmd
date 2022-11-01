@@ -202,10 +202,10 @@ masic_filtered_new[masic_filtered_new$Dataset == "Tafess_LI_TMT_1_f11_Samwise_12
 Which are the same as well. A side by side of the quantities are: 
 
 ```{r}
-pepSample <- 
-old <- theCross["C.AFIQFATR.Q",]
+pepSample <- sample(e_data$Peptide, 1)
+old <- theCross[pepSample,]
 old <- old %>% t() %>% data.frame() %>% mutate(Type = "Old") %>% relocate(Type)
-new <- e_data[e_data$Peptide == "C.AFIQFATR.Q",]
+new <- e_data[e_data$Peptide == pepSample,]
 new <- new %>% mutate(Type = "New") %>% relocate(Type) %>% select(-Peptide)
 res <- rbind(old, new) 
 res
