@@ -1,10 +1,9 @@
 #' Create an f_data (sample information object) from masic data and a metadata file
 #'
 #' @param masic A masic_data object that has been filtered by intereference_filter. Required.
-#' @param metadata A data frame with the PlexNames, IonChannelNames, SampleName,
-#'    and any other metadata to end up in the f_data file. Know that PlexNames and
-#'    IonChannelNames are used to find the data in the masic table, and Sample Name
-#'    is what the column names will be in the final table. Required.
+#' @param metadata A data frame with the IonChannelNames, PlexNames, and SampleNames,
+#'    and any other metadata to end up in the f_data file. SampleNames
+#'    will be replace the IonChannelNames and PlexNames combinations.
 #'
 #' @return A pmartR f_data (sample information) object
 #' @export
@@ -26,13 +25,8 @@ create_f_data <- function(masic,
   }
 
   # Assert that metadata has the required columns
-  if (!all(c("PlexNames", "IonChannelNames", "SampleNames") %in% colnames(metadata))) {
-    stop("PlexNames, IonChannelNames, and SampleNames must be in the metadata object.")
-  }
-
-  # Assert that all datasets have the proper plex names
-  if (!all(unique(masic$Dataset) %in% unique(metadata$PlexNames))) {
-    stop(paste0("PlexNames is missing ", unique(masic$Dataset)[unique(masic$Dataset) %in% unique(metadata$PlexNames)], sep = ", "))
+  if (!all(c("IonChannelNames", "SampleNames", "PlexNames") %in% colnames(metadata))) {
+    stop("IonChannelNames and SampleNames must be in the metadata object.")
   }
 
   # Get intensity column names
@@ -72,13 +66,17 @@ create_f_data <- function(masic,
 #'
 #' @param masic A masic_data object that has been filtered by intereference_filter. Required.
 #' @param msnid An msnid object that has been fdr and decoy filtered. Required.
-#' @param f_data An f_data object from create_f_data. Required.
+#' @param f_data An f_data object from create_f_data. Contains at a minimum the
+#'     SampleNames, PlexNames, and IonChannelNames. Required.
+#' @param plex_data Contains at a minimum the Dataset and PlexNames information. Both
+#'     f_data and plex_data are mapped to their plex and ion channels for merging. Required.
 #'
 #' @return A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object
 #' @export
 create_e_objects <- function(masic,
-                            msnid,
-                            f_data) {
+                             msnid,
+                             f_data,
+                             plex_data) {
 
   ##################
   ## CHECK INPUTS ##
@@ -114,11 +112,25 @@ create_e_objects <- function(masic,
     stop("f_data should be created with create_f_data.")
   }
 
+  # plex_data can only contains Dataset and PlexNames
+  if (!all(colnames(plex_data) %in% c("Dataset", "PlexNames"))) {
+    stop("plex_data should contain Dataset and PlexNames")
+  }
+
+  # Assert that all datasets have the proper plex names
+  if (!all(unique(masic$Dataset) %in% unique(plex_data$Dataset))) {
+    stop(paste0("PlexNames in plex_data is missing ", unique(masic$Dataset)[unique(masic$Dataset) %in% unique(plex_data$PlexNames)], sep = ", "))
+  }
+
+  # Assert that plex names maps correctly
+  if (!all(f_data$PlexNames %in% plex_data$PlexNames)) {
+    stop("All PlexNames in f_data and plex_data should match.")
+  }
+
+
   #############################
   ## BUILD THE E_DATA OBJECT ##
   #############################
-
-  #browser()
 
   # Pull the peptide identifications. Select only the required columns for pmartR.
   # Get the protein and contaminant names. If the protein matches the contaminant
@@ -145,7 +157,10 @@ create_e_objects <- function(masic,
       }) %>% unlist()
     ) %>%
     dplyr::select(-data) %>%
-    dplyr::rename(PlexNames = Dataset)
+    dplyr::inner_join(plex_data, by = "Dataset") %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-Dataset)
+
 
   # Generate the emeta object
   e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")] %>% unique()
@@ -157,11 +172,16 @@ create_e_objects <- function(masic,
   # identifications in a sample. For now, return the maximum value.
   e_data <- masic %>%
     dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames)) %>%
+    dplyr::inner_join(plex_data, by = "Dataset") %>%
+    dplyr::select(-Dataset) %>%
     tidyr::pivot_longer(f_data$IonChannelNames) %>%
-    dplyr::rename(PlexNames = Dataset, IonChannelNames = name) %>%
+    dplyr::rename(IonChannelNames = name) %>%
     dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide", "Protein")], by = c("PlexNames", "ScanNumber")) %>%
     dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
-    dplyr::group_by(SampleNames, Peptide) %>%
+    dplyr::group_by(SampleNames, Peptide)
+
+  browser()
+
     dplyr::summarise(value = sum(value, na.rm = T)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
