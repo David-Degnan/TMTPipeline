@@ -1,0 +1,117 @@
+---
+title: "TMT Pipeline Package Benchmark"
+output: html_document
+date: "2022-10-31"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(TMTPipeline)
+library(PNNL.DMS.utils)
+library(PlexedPiper)
+library(MSnID)
+library(DT)
+library(data.table)
+library(dplyr)
+```
+
+## Summary
+
+The goal of this markdown is to show Lisa and Paul the results for the pipeline 
+to process MASIC (abundances) and MS-GF+ (peptide/protein identification) data to pmartR
+data objects, and help them make educated choices regarding each step. 
+
+The pipeline is relatively simple: 
+
+0. Pull MS-GF+ and MASIC results from DMS. This is done externally to this package with PNNL.DMS.UTIL. It will eventually be replaced. 
+
+1. Filter MS-GF+ data
+    a. Filter to a FDR > 0.01 and MS1 PPM error > 10. We use the MSnID package.
+    b. Then remove decoys 
+    
+2. Filter MASIC Data 
+    a. Filter out interference scores of less than 0.5 
+    
+3. Combine and generate pmartR objects 
+
+Note that in step 1, it is essential that decoys are filtered after the FDR 
+filtering step.
+
+## Data Package 4005
+
+Load data objects: 
+
+```{r}
+# Load files
+res <- readRDS("C:/Users/degn400/OneDrive - PNNL/Desktop/OldProjects/TMT/4005_Tafess_LI/4005_Data_Package.RDS")
+job_records <- res$job_records
+msnid <- res$msnid
+masic_data <- res$masic_data
+metadata <- xlsx::read.xlsx("/Users/degn400/OneDrive - PNNL/Desktop/OldProjects/TMT/4005_Tafess_LI/Tafess_LI_metadata.xlsx", 1)
+```
+
+#### Filter FDR > 0.01 and PPM Error > 10
+
+**Old pipeline:** 
+
+```{r}
+msnid_FDR_old <- filter_msgf_data(msnid, level="peptide", fdr.max=0.01)
+msnid_FDR_old
+```
+
+**New pipeline**
+
+```{r}
+msnid_FDR_new <- fdr_filter(msnid)
+msnid_FDR_new
+```
+
+#### Filter Decoys 
+
+**Old pipeline:**
+
+```{r}
+msnid_decoy_old <- apply_filter(msnid_FDR_old, "!isDecoy")
+msnid_decoy_old
+```
+
+**New pipeline:**
+
+```{r}
+msnid_decoy_new <- decoy_filter(msnid_FDR_new)
+msnid_decoy_new
+```
+
+#### Filter Interference > 0.5
+
+**Old pipeline:**
+
+```{r}
+masic_filtered_old <- filter_masic_data(masic_data,
+                                        interference_score_threshold = 0.5,
+                                        s2n_threshold = 0)
+nrow(masic_filtered_old)
+```
+
+**New pipeline:**
+
+```{r}
+class(masic_data) <- c(class(masic_data), "masic_data")
+masic_filtered_new <- interference_filter(masic_data, remove_all_missing = FALSE)
+nrow(masic_filtered_new)
+```
+
+#### Create CrossTabs 
+
+**Old pipeline:**
+
+```{r}
+fractions <- 
+
+crosstab <- create_crosstab(msnid_decoy_old, masic_filtered_old,
+                            aggregation_level = "peptide",
+                            fractions, samples, references)
+
+```
+
+
