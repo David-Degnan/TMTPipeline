@@ -139,6 +139,10 @@ theCross[c("K.AASDIWKPVLSIDTEPR.K", "C.AFIQFATR.Q", "A.SFEPFSNK.G"),] %>%
   data.frame()
 ```
 
+NA values are assumed to be 1 when dividing sum Intensities by
+the Reference. 
+
+
 **New pipeline:**
 
 ```{r}
@@ -163,7 +167,7 @@ e_data <- e_objects[[1]]
 e_data[e_data$Peptide %in% c("K.AASDIWKPVLSIDTEPR.K", "C.AFIQFATR.Q", "A.SFEPFSNK.G"),]
 ```
 
-#### Why are thess results *SO* different? 
+#### The Results 
 
 Let's start with C.AFIQFATR.Q
 
@@ -198,6 +202,7 @@ masic_filtered_new[masic_filtered_new$Dataset == "Tafess_LI_TMT_1_f11_Samwise_12
 Which are the same as well. A side by side of the quantities are: 
 
 ```{r}
+pepSample <- 
 old <- theCross["C.AFIQFATR.Q",]
 old <- old %>% t() %>% data.frame() %>% mutate(Type = "Old") %>% relocate(Type)
 new <- e_data[e_data$Peptide == "C.AFIQFATR.Q",]
@@ -206,22 +211,6 @@ res <- rbind(old, new)
 res
 ```
 
-```{r}
-res %>%
-  tidyr::pivot_longer(colnames(res)[2:12]) %>%
-  ggplot(aes(x = name, y = value, color = Type)) + geom_point() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90)) 
-```
-
-My attempt at this "division" thing that is being done: 
-
-```{r}
-quant_data_i_w <- e_data[,2:12]
-ref_values <- with(quant_data_i_w, eval(parse(text = "Reference")))
-quant_data_i_w / ref_values
-
-```
 
 
 

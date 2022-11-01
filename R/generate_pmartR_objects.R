@@ -158,9 +158,7 @@ create_e_objects <- function(masic,
     ) %>%
     dplyr::select(-data) %>%
     dplyr::inner_join(plex_data, by = "Dataset") %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-Dataset)
-
+    dplyr::ungroup()
 
   # Generate the emeta object
   e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")] %>% unique()
@@ -173,15 +171,11 @@ create_e_objects <- function(masic,
   e_data <- masic %>%
     dplyr::select(c(Dataset, ScanNumber, f_data$IonChannelNames)) %>%
     dplyr::inner_join(plex_data, by = "Dataset") %>%
-    dplyr::select(-Dataset) %>%
     tidyr::pivot_longer(f_data$IonChannelNames) %>%
     dplyr::rename(IonChannelNames = name) %>%
-    dplyr::inner_join(psm_data[,c("PlexNames", "ScanNumber", "Peptide", "Protein")], by = c("PlexNames", "ScanNumber")) %>%
     dplyr::inner_join(f_data[,c("PlexNames", "IonChannelNames", "SampleNames")], by = c("PlexNames", "IonChannelNames")) %>%
-    dplyr::group_by(SampleNames, Peptide)
-
-  browser()
-
+    dplyr::inner_join(psm_data[,c("Peptide", "ScanNumber", "PlexNames", "Dataset")], by = c("ScanNumber", "PlexNames", "Dataset")) %>%
+    dplyr::group_by(SampleNames, Peptide) %>%
     dplyr::summarise(value = sum(value, na.rm = T)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
