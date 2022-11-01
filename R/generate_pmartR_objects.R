@@ -3,7 +3,7 @@
 #' @param masic A masic_data object that has been filtered by intereference_filter. Required.
 #' @param metadata A data frame with the IonChannelNames, PlexNames, and SampleNames,
 #'    and any other metadata to end up in the f_data file. SampleNames
-#'    will be replace the IonChannelNames and PlexNames combinations.
+#'    will replace the IonChannelNames and PlexNames combinations.
 #'
 #' @return A pmartR f_data (sample information) object
 #' @export

@@ -11,7 +11,7 @@ create_f_data(masic, metadata)
 
 \item{metadata}{A data frame with the IonChannelNames, PlexNames, and SampleNames,
 and any other metadata to end up in the f_data file. SampleNames
-will be replace the IonChannelNames and PlexNames combinations.}
+will replace the IonChannelNames and PlexNames combinations.}
 }
 \value{
 A pmartR f_data (sample information) object

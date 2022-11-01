@@ -8,9 +8,9 @@ tmt_pipeline(
   msnid,
   masic,
   metadata,
+  plex_data,
   outpath = "~/Downloads/",
-  interference_score_threshold = 0.5,
-  remove_all_missing = TRUE
+  interference_score_threshold = 0.5
 )
 }
 \arguments{
@@ -18,18 +18,17 @@ tmt_pipeline(
 
 \item{masic}{An object of the masic data class. Required.}
 
-\item{metadata}{A data frame with the PlexNames, IonChannelNames, SampleName,
-and any other metadata to end up in the f_data file. Know that PlexNames and
-IonChannelNames are used to find the data in the masic table, and Sample Name
-is what the column names will be in the final table. Required.}
+\item{metadata}{A data frame with the IonChannelNames, PlexNames, and SampleNames,
+and any other metadata to end up in the f_data file. SampleNames will
+replace the IonChannelNames and PlexNames combinations.}
+
+\item{plex_data}{Contains at a minimum the Dataset and PlexNames information.
+Both f_data and plex_data are mapped to their plex and ion channels for merging. Required.}
 
 \item{outpath}{The folder to write the e_data, e_meta, and f_data files to. Required.}
 
 \item{interference_score_threshold}{A numeric between 0-1 to view the maximum interference.
 The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.}
-
-\item{remove_all_missing}{A logical to indicate whether a dataset and scan number where
-there is no intensity/abundance at any ion intensity should be removed. Default is TRUE.}
 }
 \description{
 Main pipeline script to run the TMT Pipeline

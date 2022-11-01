@@ -4,21 +4,13 @@
 \alias{interference_filter}
 \title{Filter MASIC data by an interference score and remove all missing measurements}
 \usage{
-interference_filter(
-  masic,
-  interference_score_threshold = 0.5,
-  remove_all_missing = TRUE
-)
+interference_filter(masic, interference_score_threshold = 0.5)
 }
 \arguments{
 \item{masic}{An object of the masic data class. Required.}
 
 \item{interference_score_threshold}{A numeric between 0-1 to view the maximum interference.
 The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.}
-
-\item{remove_all_missing}{A logical to indicate whether a dataset and scan number
-where there is no intensity/abundance at any ion intensity should be removed.
-Default is TRUE.}
 }
 \value{
 A filtered object of the masic data class

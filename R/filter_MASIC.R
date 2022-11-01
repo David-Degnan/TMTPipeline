@@ -23,11 +23,6 @@ interference_filter <- function(masic,
     stop("intereference_score_threshold should be a numeric that range from 0 to 1.")
   }
 
-  # Remove all missing should be a true or false
-  if (remove_all_missing != TRUE & remove_all_missing != FALSE) {
-    stop("remove_all_missing should be true or false.")
-  }
-
   ##################
   ## APPLY FILTER ##
   ##################

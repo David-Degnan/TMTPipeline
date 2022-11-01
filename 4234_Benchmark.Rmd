@@ -64,13 +64,24 @@ Sample names is what will end up in the f_data and e_data files.
 
 ```{r}
 metadata <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/metadata.csv")
+metadata$PlexNames <- gsub("78679_EBC_B1_|_09Aug22_Remus_WBEH-22-05-07", "", metadata$PlexNames)
 datatable(metadata, options = list(scrollX = T))
+```
+
+```{r}
+# Generate the plex data 
+plex_data <- data.frame(
+  "Dataset" = unique(masic$Dataset)
+) %>%
+  dplyr::mutate(PlexNames = gsub("78679_EBC_B1_|_09Aug22_Remus_WBEH-22-05-07", "", Dataset))
+
+datatable(plex_data, options = list(scrollX = TRUE))
 ```
 
 Run the pipeline: 
 
 ```{r}
-tmt_pipeline(msnid, masic, metadata, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/")
+tmt_pipeline(msnid, masic, metadata, plex_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/")
 
 # Add X to f_data names so that the data easily loads into pmartR
 f_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv")
@@ -78,11 +89,22 @@ f_data$SampleNames <- paste0("X", f_data$SampleNames)
 write.csv(f_data, "~/Desktop/OldProjects/TMT/Results/DataPackage4234/f_data.csv", quote = F, row.names = F)
 ```
 
-Generate a pmartR object. Note the 76% missingness after FDR, decoy, and interference filtering. 
+Generate a pmartR object. Note the 78% missingness after FDR, decoy, interference,
+and contaminant filtering. 
 
 ```{r}
 e_data <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_data.csv")
 e_meta <- read.csv("~/Desktop/OldProjects/TMT/Results/DataPackage4234/e_meta.csv")
+
+# Filter out contaminants
+toRm <- e_meta[e_meta$Contaminant %in% c("Yes", "Potential"), "Peptide"] 
+e_data <- e_data[e_data$Peptide %in% toRm == FALSE,]
+e_meta <- e_meta[e_meta$Contaminant == "No",]
+datatable(e_data, options = list(scrollX = TRUE))
+```
+
+
+```{r}
 isoPep <- as.isobaricpepData(e_data, f_data, e_meta, "Peptide", "SampleNames", "Protein")
 summary(isoPep)
 ```
@@ -92,6 +114,10 @@ is no pmartR filtering with this check, which is why contaminants show up in thi
 
 ```{r}
 isoPep <- edata_transform(isoPep, "log2")
+
+# Filter degenerate peptides
+isoPep <- applyFilt(proteomics_filter(isoPep), isoPep, min_num_peps = 2)
+
 isoNorm <- normalize_isobaric(isoPep, apply_norm = T, exp_cname = "PlexNames", 
                               refpool_cname = "Type", refpool_notation = "Reference")
 isoRoll <- protein_quant(isoPep, method = "rollup")
