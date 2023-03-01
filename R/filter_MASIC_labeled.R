@@ -15,8 +15,8 @@ interference_filter_labeled <- function(masic,
   ## CHECK INPUTS ##
   ##################
 
-  if (!inherits(masic, "masic_data_isobaric")) {
-    stop("interference_filter requires a masic_data_isobaric object.")
+  if (!inherits(masic, "masic_data_labeled")) {
+    stop("interference_filter requires a masic_data_labeled object.")
   }
 
   # Interference filter should be a value between 0 and 1
