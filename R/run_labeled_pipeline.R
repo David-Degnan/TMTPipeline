@@ -1,4 +1,4 @@
-#' Main pipeline script to run the TMT Pipeline
+#' Main labeled pipeline script
 #'
 #' @param msnid (MSnID object) collated MSGF output. Required.
 #' @param masic An object of the masic data class. Required.
@@ -12,14 +12,15 @@
 #'     The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.
 #' @param ascore_threshold If phosphoproteomics, filter by an A score threshold.
 #'     Default is NULL.
+#'
 #' @export
-tmt_pipeline <- function(msnid,
-                         masic,
-                         metadata,
-                         plex_data,
-                         outpath = "~/Downloads/",
-                         interference_score_threshold = 0.5,
-                         a_score_threshold = NULL) {
+labeled_pipeline <- function(msnid,
+                             masic,
+                             metadata,
+                             plex_data,
+                             outpath = "~/Downloads/",
+                             interference_score_threshold = 0.5,
+                             a_score_threshold = NULL) {
 
   # 1. FDR filter the MS-GF data
   msgf_filtered <- fdr_filter(msnid)

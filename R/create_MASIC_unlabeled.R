@@ -41,11 +41,12 @@ create_MASIC_unlabeled <- function(folder_path,
 
   # Pull and knit files together into one data frame
   masic <- do.call(rbind,
-   lapply(theFiles, function(theFile) {
+   lapply(SIC_Files, function(theFile) {
+     message(theFile)
      data.table::fread(theFile) %>%
        dplyr::select(FragScanNumber, PeakArea, InterferenceScore) %>%
        dplyr::rename(ScanNumber = FragScanNumber, Intensity = PeakArea) %>%
-       dplyr::mutate(Dataset = theFiles[1] %>% strsplit("/", fixed = T) %>% unlist() %>% tail(1)) %>%
+       dplyr::mutate(Dataset = theFile %>% strsplit("/", fixed = T) %>% unlist() %>% tail(1) %>% gsub("_SICstats.txt", "", x = ., fixed = T)) %>%
        dplyr::relocate(Dataset) %>%
        dplyr::filter(InterferenceScore >= 0.5)
    })
