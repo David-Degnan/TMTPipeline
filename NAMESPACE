@@ -2,7 +2,8 @@
 
 export(as_masic_labeled)
 export(create_MASIC_unlabeled)
-export(create_e_objects)
+export(create_e_objects_labeled)
+export(create_e_objects_unlabeled)
 export(create_f_data)
 export(decoy_filter)
 export(fdr_filter)

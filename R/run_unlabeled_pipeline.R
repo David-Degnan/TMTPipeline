@@ -26,10 +26,11 @@ unlabeled_pipeline <- function(msnid,
 
   # 4. Generate the f_data, e_data, and e_meta
   f_data <- create_f_data(masic, metadata)
-  e_objects <- create_e_objects_unlabeled(masic_filtered, msgf_nodecoy, f_data, plex_data)
+  e_objects <- create_e_objects_unlabeled(masic, msgf_nodecoy, metadata)
 
-
-
-
+  # Write results
+  write.csv(e_objects[[1]], file.path(outpath, "e_data.csv"), quote = F, row.names = F)
+  write.csv(e_objects[[2]], file.path(outpath, "e_meta.csv"), quote = F, row.names = F)
+  write.csv(f_data, file.path(outpath, "f_data.csv"), quote = F, row.names = F)
 
 }

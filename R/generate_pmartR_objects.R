@@ -222,16 +222,16 @@ create_e_objects_labeled <- function(masic,
 
 #' Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from unlabeled masic data, msnid, and metadata
 #'
-#' @param masic A masic_data_unlabeled object that has been filtered by intereference_filter. Required.
+#' @param masic A masic_data_unlabeled object. Required.
 #' @param msnid An msnid object that has been fdr and decoy filtered. Required.
 #' @param metadata A data frame. SampleNames and FileNames are required,
 #'    where any duplicated SampleNames are summed.
 #'
 #' @return A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object
 #' @export
-create_e_data_objects_unlabeled <- function(masic,
-                                            msnid,
-                                            metadata) {
+create_e_objects_unlabeled <- function(masic,
+                                       msnid,
+                                       metadata) {
 
   ##################
   ## CHECK INPUTS ##
@@ -289,12 +289,26 @@ create_e_data_objects_unlabeled <- function(masic,
   e_data[is.na(e_data)] <- 0
 
   # Select the e_meta data that matters
-  msnid@psms %>%
-    dplyr::filter(peptide %in% e_data$Peptide)
+  e_meta <- msnid@psms %>%
+    dplyr::filter(peptide %in% e_data$Peptide) %>%
+    dplyr::select(peptide, Protein) %>%
+    unique() %>%
+    dplyr::rename(Peptide = peptide) %>%
+    dplyr::mutate(
+      ContaminantName = ifelse(grepl("Contaminant", Protein), gsub("Contaminant_", "", Protein), NA),
+      ProteinName = purrr::map(Protein, function(x) {
+        ifelse(grepl("Contaminant_", x), NA, strsplit(x, "|", fixed = T) %>% unlist() %>% tail(1))
+      }) %>% unlist()
+    ) %>%
+    dplyr::mutate(
+      Contaminant = ifelse(!is.na(ContaminantName), "Yes", "No")
+    ) %>%
+    dplyr::select(-c(ContaminantName)) %>%
+    dplyr::rename(UncleanedProteinName = Protein, Protein = ProteinName)
 
-
-
-
+  # Return objects
+  return(list(data.frame(e_data),
+              data.frame(e_meta)))
 
 }
 
