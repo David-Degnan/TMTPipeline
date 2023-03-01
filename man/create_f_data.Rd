@@ -7,11 +7,14 @@
 create_f_data(masic, metadata)
 }
 \arguments{
-\item{masic}{A masic_data object that has been filtered by intereference_filter. Required.}
+\item{masic}{A masic_data_unlabeled or a masic_data_labeled object. Required.}
 
-\item{metadata}{A data frame with the IonChannelNames, PlexNames, and SampleNames,
-and any other metadata to end up in the f_data file. SampleNames
-will replace the IonChannelNames and PlexNames combinations.}
+\item{metadata}{A data frame. For labeled proteomics, the minimum columns:
+IonChannelNames, PlexNames, and SampleNames, where SampleNames
+will replace the IonChannelNames and PlexNames combinations. For unlabeled
+proteomics, SampleNames and FileNames are required, where any duplicated SampleNames
+are summed. Any additional columns in metadata will be returned in the
+f_data file. Required.}
 }
 \value{
 A pmartR f_data (sample information) object

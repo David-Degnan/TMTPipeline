@@ -1,9 +1,12 @@
 #' Create an f_data (sample information object) from masic data and a metadata file
 #'
-#' @param masic A masic_data object that has been filtered by intereference_filter. Required.
-#' @param metadata A data frame with the IonChannelNames, PlexNames, and SampleNames,
-#'    and any other metadata to end up in the f_data file. SampleNames
-#'    will replace the IonChannelNames and PlexNames combinations.
+#' @param masic A masic_data_unlabeled or a masic_data_labeled object. Required.
+#' @param metadata A data frame. For labeled proteomics, the minimum columns:
+#'    IonChannelNames, PlexNames, and SampleNames, where SampleNames
+#'    will replace the IonChannelNames and PlexNames combinations. For unlabeled
+#'    proteomics, SampleNames and FileNames are required, where any duplicated SampleNames
+#'    are summed. Any additional columns in metadata will be returned in the
+#'    f_data file. Required.
 #'
 #' @return A pmartR f_data (sample information) object
 #' @export
@@ -15,37 +18,64 @@ create_f_data <- function(masic,
   ##################
 
   # masic data should be a masic data object
-  if (!inherits(masic, "masic_data")) {
-    stop("A masic_data object is required.")
+  if (!any(grepl("masic_data", class(masic)))) {
+    stop("A masic_data object, either labeled or unlabeled, is required.")
   }
 
   # masic data is suggested to be interference filtered
   if (is.null(attr(masic, "TMTPipeline")$InterferenceFiltered)) {
-    message("Applying an intereference filter is recommended before building pmartR objects")
+    message("Applying an interference filter is recommended before building pmartR objects")
   }
 
-  # Assert that metadata has the required columns
-  if (!all(c("IonChannelNames", "SampleNames", "PlexNames") %in% colnames(metadata))) {
-    stop("IonChannelNames and SampleNames must be in the metadata object.")
-  }
+  # Run specific unlabeled masic data checks
+  if (inherits(masic, "masic_data_labeled")) {
 
-  # Get intensity column names
-  IntensColumns <- colnames(masic)[!grepl("_OriginalIntensity|_SignalToNoise|InterferenceScore|Dataset|ScanNumber", colnames(masic))]
+    # Assert that metadata has the required columns
+    if (!all(c("IonChannelNames", "SampleNames", "PlexNames") %in% colnames(metadata))) {
+      stop("IonChannelNames, SampleNames, and PlexNames must be in the metadata object.")
+    }
 
-  # Assert that all ion names are included
-  if (!all(IntensColumns %in% unique(metadata$IonChannelNames))) {
-    stop(paste0("IonChannelNames is missing ", IntensColumns[IntensColumns %in% unique(metadata$IonChannelNames)], sep = ", "))
-  }
+    # Get intensity column names
+    IntensColumns <- colnames(masic)[!grepl("_OriginalIntensity|_SignalToNoise|InterferenceScore|Dataset|ScanNumber", colnames(masic))]
 
-  # Let the user know if blanks were detect
-  if ("" %in% metadata$SampleNames | any(is.na(metadata$SampleNames))) {
-    message("Blanks detected in metadata. Those entries will be removed.")
-    metadata <- metadata[metadata$SampleNames != "" & !is.na(metadata$SampleNames),]
-  }
+    # Assert that all ion names are included
+    if (!all(IntensColumns %in% unique(metadata$IonChannelNames))) {
+      stop(paste0("IonChannelNames is missing ", IntensColumns[IntensColumns %in% unique(metadata$IonChannelNames)], sep = ", "))
+    }
 
-  # Assert that sample names are unique
-  if (length(unique(metadata$SampleNames)) != length(metadata$SampleNames)) {
-    stop("Duplicate names detected in SampleNames")
+    # Let the user know if blanks were detect
+    if ("" %in% metadata$SampleNames | any(is.na(metadata$SampleNames))) {
+      message("Blanks detected in metadata. Those entries will be removed.")
+      metadata <- metadata[metadata$SampleNames != "" & !is.na(metadata$SampleNames),]
+    }
+
+    # Assert that sample names are unique
+    if (length(unique(metadata$SampleNames)) != length(metadata$SampleNames)) {
+      stop("Duplicate names detected in SampleNames")
+    }
+
+  } else if (inherits(masic, "masic_data_unlabeled")) {
+
+    # Assert that metadata has the required columns
+    if (!all(c("FileNames", "SampleNames") %in% colnames(metadata))) {
+      stop("FileNames and SampleNames must be in the metadata object.")
+    }
+
+    # Collapse metadata
+    metadata <- metadata %>%
+        dplyr::select(-FileNames) %>%
+        unique()
+
+    # Rename rows
+    row.names(metadata) <- 1:nrow(metadata)
+
+    # Assert that sample names are unique
+    if (length(unique(metadata$SampleNames)) != length(metadata$SampleNames)) {
+      stop("Duplicate names detected in SampleNames. If additional columns were provided for f_data, make sure they are consistent for each sample name.")
+    }
+
+  } else {
+    stop("Unrecongized masic object. The class should be either masic_data_labeled or masic_data_unlabeled")
   }
 
   #############################
@@ -62,9 +92,9 @@ create_f_data <- function(masic,
 
 }
 
-#' Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from masic data, msnid, and f_data
+#' Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from labeled masic data, msnid, f_data, and plex information
 #'
-#' @param masic A masic_data object that has been filtered by intereference_filter. Required.
+#' @param masic A masic_data_labeled object that has been filtered by intereference_filter. Required.
 #' @param msnid An msnid object that has been fdr and decoy filtered. Required.
 #' @param f_data An f_data object from create_f_data. Contains at a minimum the
 #'     SampleNames, PlexNames, and IonChannelNames. Required.
@@ -73,18 +103,18 @@ create_f_data <- function(masic,
 #'
 #' @return A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object
 #' @export
-create_e_objects <- function(masic,
-                             msnid,
-                             f_data,
-                             plex_data) {
+create_e_objects_labeled <- function(masic,
+                                     msnid,
+                                     f_data,
+                                     plex_data) {
 
   ##################
   ## CHECK INPUTS ##
   ##################
 
   # masic data should be a masic data object
-  if (!inherits(masic, "masic_data")) {
-    stop("A masic_data object is required.")
+  if (!inherits(masic, "masic_data_labeled")) {
+    stop("A masic_data_labeled object is required.")
   }
 
   # masic data is suggested to be interference filtered
@@ -187,6 +217,84 @@ create_e_objects <- function(masic,
   # Return objects
   return(list(data.frame(e_data),
               data.frame(e_meta)))
+
+}
+
+#' Create an e_data (biomolecule expression or crosstab) and e_meta (biomolecule data) from unlabeled masic data, msnid, and metadata
+#'
+#' @param masic A masic_data_unlabeled object that has been filtered by intereference_filter. Required.
+#' @param msnid An msnid object that has been fdr and decoy filtered. Required.
+#' @param metadata A data frame. SampleNames and FileNames are required,
+#'    where any duplicated SampleNames are summed.
+#'
+#' @return A list with a pmartR e_data (biomolecule expression) object and a pmartR e_meta (biomolecule data) object
+#' @export
+create_e_data_objects_unlabeled <- function(masic,
+                                            msnid,
+                                            metadata) {
+
+  ##################
+  ## CHECK INPUTS ##
+  ##################
+
+  # masic data should be a masic data object
+  if (!inherits(masic, "masic_data_unlabeled")) {
+    stop("A masic_data_labeled object is required.")
+  }
+
+  # masic data is suggested to be interference filtered
+  if (is.null(attr(masic, "TMTPipeline")$InterferenceFiltered)) {
+    message("Applying an intereference filter is recommended before building pmartR objects")
+  }
+
+  # Input should be an msnid object
+  if (!inherits(msnid, "MSnID")) {
+    stop("msnid should be a MSnID object.")
+  }
+
+  # msnid should already be FDR filtered
+  if (is.null(attr(msnid, "TMTPipeline")$FDRFiltered)) {
+    stop("Run the fdr_filter on the msnid data first.")
+  }
+
+  # msnid should already be decoy filtered
+  if (is.null(attr(msnid, "TMTPipeline")$DecoyFiltered)) {
+    stop("Run the decoy_filter on the msnid data first.")
+  }
+
+  # f_data should have been created with the appropriate function
+  if (is.null(attr(f_data, "valid_f_data"))) {
+    stop("f_data should be created with create_f_data.")
+  }
+
+  #############################
+  ## BUILD THE E_DATA OBJECT ##
+  #############################
+
+  # Make the e_data object by:
+  # 1. Merge msnid to masic data by scan number and peptide
+  # 2. Merge to metadata for sample names
+  # 3. Group by SampleNames and Peptide and sum
+  # 4. Pivot wider
+  e_data <- msnid@psms %>%
+    dplyr::select(Dataset, Scan, peptide) %>%
+    dplyr::rename(ScanNumber = Scan, Peptide = peptide) %>%
+    dplyr::left_join(masic[,c("Dataset", "ScanNumber", "Intensity")], by = c("Dataset", "ScanNumber")) %>%
+    dplyr::left_join(metadata[,c("FileNames", "SampleNames")] %>% dplyr::rename(Dataset = FileNames), by = "Dataset") %>%
+    dplyr::select(-c(Dataset, ScanNumber)) %>%
+    dplyr::group_by(SampleNames, Peptide) %>%
+    dplyr::summarise(SumIntensity = sum(Intensity, na.rm = T)) %>%
+    tidyr::pivot_wider(names_from = SampleNames, id_cols = Peptide, values_from = SumIntensity)
+
+  e_data[is.na(e_data)] <- 0
+
+  # Select the e_meta data that matters
+  msnid@psms %>%
+    dplyr::filter(peptide %in% e_data$Peptide)
+
+
+
+
 
 }
 

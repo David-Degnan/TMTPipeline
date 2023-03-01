@@ -24,7 +24,10 @@ unlabeled_pipeline <- function(msnid,
   # 3. Generate the masic data from the SICstats files
   masic <- create_MASIC_unlabeled(folder_path = folder_path, interference_score_threshold = interference_score_threshold)
 
-  #
+  # 4. Generate the f_data, e_data, and e_meta
+  f_data <- create_f_data(masic, metadata)
+  e_objects <- create_e_objects_unlabeled(masic_filtered, msgf_nodecoy, f_data, plex_data)
+
 
 
 

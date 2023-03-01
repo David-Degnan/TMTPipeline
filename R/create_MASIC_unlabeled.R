@@ -42,7 +42,6 @@ create_MASIC_unlabeled <- function(folder_path,
   # Pull and knit files together into one data frame
   masic <- do.call(rbind,
    lapply(SIC_Files, function(theFile) {
-     message(theFile)
      data.table::fread(theFile) %>%
        dplyr::select(FragScanNumber, PeakArea, InterferenceScore) %>%
        dplyr::rename(ScanNumber = FragScanNumber, Intensity = PeakArea) %>%
@@ -51,6 +50,13 @@ create_MASIC_unlabeled <- function(folder_path,
        dplyr::filter(InterferenceScore >= 0.5)
    })
   )
+
+  #########################################
+  ## ADD CLASS AND ATTRIBUTE INFORMATION ##
+  #########################################
+
+  # Apply and track filter
+  attr(masic, "TMTPipeline")$InterferenceFiltered <- TRUE
 
   # Add the correct class
   class(masic) <- c(class(masic), "masic_data_unlabeled")

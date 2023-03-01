@@ -32,9 +32,9 @@ labeled_pipeline <- function(msnid,
   masic <- as_masic_labeled(masic)
   masic_filtered <- interference_filter_labeled(masic, interference_score_threshold)
 
-  # 4. Generate the f_data, e_data, and e_emta
+  # 4. Generate the f_data, e_data, and e_meta
   f_data <- create_f_data(masic_filtered, metadata)
-  e_objects <- create_e_objects(masic_filtered, msgf_nodecoy, f_data, plex_data)
+  e_objects <- create_e_objects_labeled(masic_filtered, msgf_nodecoy, f_data, plex_data)
 
   # Write results
   write.csv(e_objects[[1]], file.path(outpath, "e_data.csv"), quote = F, row.names = F)
