@@ -1,16 +1,15 @@
 #' Create MASIC data when the proteomics dataset is unlabeled
 #'
-#' @param folder_path Path to the SICstats txt files. Required.
-#' @param interference_score_threshold A numeric between 0-1 to view the maximum interference.
-#'      The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.
-#'
+#' @param folder_path (string) Path to the SICstats txt files. Required.
+#' @param interference_score_threshold (numeric) A value 0-1 to view the maximum interference.
+#'      The higher the number, the cleaner parent ion at MS1 level. Default is 0 (no filtering).
+#' @return (masic_data_unlabeled) An inteference score filtered masic_data_unlabeled object
+#' 
 #' @importFrom dplyr %>%
-#'
-#' @return An inteference score filtered masic_data_unlabeled object
 #'
 #' @export
 create_MASIC_unlabeled <- function(folder_path,
-                                   interference_score_threshold = 0.5) {
+                                   interference_score_threshold = 0) {
 
   ##################
   ## CHECK INPUTS ##
@@ -65,7 +64,3 @@ create_MASIC_unlabeled <- function(folder_path,
   return(masic)
 
 }
-
-
-
-

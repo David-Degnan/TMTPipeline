@@ -10,23 +10,31 @@
 #' @param outpath The folder to write the e_data, e_meta, and f_data files to. Required.
 #' @param interference_score_threshold A numeric between 0-1 to view the maximum interference.
 #'     The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.
-#' @param ascore_threshold If phosphoproteomics, filter by an A score threshold.
-#'     Default is NULL.
+#' @param ascore_file (data.frame) Add an AScore file to filter phosphoproteomics data by uploading
+#'     this data.frame. Default is NULL.  
+#' @param ascore_threshold (numeric) If phosphoproteomics, filter by an AScore threshold.
+#'     Default is 17, see [here](https://www.nature.com/articles/nbt1240)
 #'
 #' @export
-labeled_pipeline <- function(msnid,
-                             masic,
-                             metadata,
-                             plex_data,
-                             outpath = "~/Downloads/",
-                             interference_score_threshold = 0.5,
-                             a_score_threshold = NULL) {
+run_labeled_pipeline <- function(msnid,
+                                 masic,
+                                 metadata,
+                                 plex_data,
+                                 outpath = "~/Downloads/",
+                                 interference_score_threshold = 0.5,
+                                 ascore_file = NULL,
+                                 ascore_threshold = 17) {
 
   # 1. FDR filter the MS-GF data
   msgf_filtered <- fdr_filter(msnid)
 
   # 2. Decoy filter the MS-GF data
   msgf_nodecoy <- decoy_filter(msgf_filtered)
+  
+  # Optionally, ascore filter the MS-GF data
+  if (!is.null(ascore_file)) {
+    msgf_nodecoy <- ascore_filter(msgf_nodecoy, ascore_file, ascore_threshold)
+  }
 
   # 3. Filter the masic data
   masic <- as_masic_labeled(masic)

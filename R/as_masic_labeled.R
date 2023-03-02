@@ -1,6 +1,7 @@
 #' Make a MASIC data object for labeled data
 #'
-#' @param masic The data to make a labeled masic data object. Required.
+#' @param masic (data.frame) The data.frame to be converted into a labeled masic data object. Required.
+#' @return (masic_data_labeled) A labeled masic data object. 
 #'
 #' @importFrom dplyr %>%
 #'

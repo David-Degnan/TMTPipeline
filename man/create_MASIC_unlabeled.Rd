@@ -4,16 +4,16 @@
 \alias{create_MASIC_unlabeled}
 \title{Create MASIC data when the proteomics dataset is unlabeled}
 \usage{
-create_MASIC_unlabeled(folder_path, interference_score_threshold = 0.5)
+create_MASIC_unlabeled(folder_path, interference_score_threshold = 0)
 }
 \arguments{
-\item{folder_path}{Path to the SICstats txt files. Required.}
+\item{folder_path}{(string) Path to the SICstats txt files. Required.}
 
-\item{interference_score_threshold}{A numeric between 0-1 to view the maximum interference.
-The higher the number, the cleaner parent ion at MS1 level. Default is 0.5.}
+\item{interference_score_threshold}{(numeric) A value 0-1 to view the maximum interference.
+The higher the number, the cleaner parent ion at MS1 level. Default is 0 (no filtering).}
 }
 \value{
-An inteference score filtered masic_data_unlabeled object
+(masic_data_unlabeled) An inteference score filtered masic_data_unlabeled object
 }
 \description{
 Create MASIC data when the proteomics dataset is unlabeled

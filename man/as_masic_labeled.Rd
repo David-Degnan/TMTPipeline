@@ -7,7 +7,10 @@
 as_masic_labeled(masic)
 }
 \arguments{
-\item{masic}{The data to make a labeled masic data object. Required.}
+\item{masic}{(data.frame) The data.frame to be converted into a labeled masic data object. Required.}
+}
+\value{
+(masic_data_labeled) A labeled masic data object.
 }
 \description{
 Make a MASIC data object for labeled data

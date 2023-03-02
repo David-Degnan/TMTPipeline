@@ -2,7 +2,7 @@
 % Please edit documentation in R/filter_MSGF.R
 \name{decoy_filter}
 \alias{decoy_filter}
-\title{Remove decoys}
+\title{Remove decoys from an msnid object}
 \usage{
 decoy_filter(msnid)
 }

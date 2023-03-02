@@ -157,41 +157,29 @@ create_e_objects_labeled <- function(masic,
     stop("All PlexNames in f_data and plex_data should match.")
   }
 
-
   #############################
   ## BUILD THE E_DATA OBJECT ##
   #############################
-
-  # Pull the peptide identifications. Select only the required columns for pmartR.
-  # Get the protein and contaminant names. If the protein matches the contaminant
-  # name only, it is a contaminant. If it matches both the contaminant and protein
-  # names, it is potentially a contaminant. Otherwise, it is not a contaminant.
+    
+  # Pull necessary columns 
   psm_data <- MSnID::psms(msnid) %>%
-    dplyr::select(Dataset, Scan, peptide, Protein) %>%
+    dplyr::select(Dataset, Scan, peptide, Protein) 
+  emeta_cols <- c("Peptide", "Protein", "ProteinName", "Contaminant")
+  
+  # Pull the peptide identifications. Select only the required columns for pmartR.
+  # Identify contaminants
+  psm_data <- psm_data %>%
     dplyr::rename(ScanNumber = Scan, Peptide = peptide) %>%
     dplyr::mutate(
-      ContaminantName = ifelse(grepl("Contaminant", Protein), gsub("Contaminant_", "", Protein), NA),
+      Contaminant = ifelse(grepl("Contaminant", Protein), "Yes", "No"),
       ProteinName = purrr::map(Protein, function(x) {
         ifelse(grepl("Contaminant_", x), NA, strsplit(x, "|", fixed = T) %>% unlist() %>% tail(1))
       }) %>% unlist()
     ) %>%
-    dplyr::group_by(Dataset, ScanNumber, Peptide) %>%
-    tidyr::nest() %>%
-    dplyr::mutate(
-      Protein = purrr::map(data, function(x) {x[,c("ContaminantName", "ProteinName")] %>% unlist() %>% unique() %>% .[!is.na(.)]}),
-    ) %>%
-    tidyr::unnest(Protein) %>%
-    dplyr::mutate(
-      Contaminant = purrr::map2(data, Protein, function(x, y) {
-        ifelse(y %in% x$ContaminantName, ifelse(y %in% x$ProteinName, "Potential", "Yes"), "No")
-      }) %>% unlist()
-    ) %>%
-    dplyr::select(-data) %>%
-    dplyr::inner_join(plex_data, by = "Dataset") %>%
-    dplyr::ungroup()
+    dplyr::inner_join(plex_data, by = "Dataset")
 
   # Generate the emeta object
-  e_meta <- psm_data[,c("Peptide", "Protein", "Contaminant")] %>% unique()
+  e_meta <- psm_data[, emeta_cols] %>% unique()
 
   class(masic) <- c("data.table", "data.frame")
 
@@ -209,10 +197,13 @@ create_e_objects_labeled <- function(masic,
     dplyr::summarise(value = sum(value, na.rm = T)) %>%
     tidyr::pivot_wider(values_from = value, names_from = SampleNames)
 
+  # Set na to 0
   e_data[is.na(e_data)] <- 0
 
   # Filter e_meta to identified peptides
-  e_meta <- e_meta[e_meta$Peptide %in% e_data$Peptide,] %>% dplyr::ungroup()
+  e_meta <- e_meta[e_meta$Peptide %in% e_data$Peptide,] %>% 
+    dplyr::ungroup() %>%
+    dplyr::rename(UncleanedProteinName = Protein, Protein = ProteinName)
 
   # Return objects
   return(list(data.frame(e_data),

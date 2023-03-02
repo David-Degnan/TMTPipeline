@@ -87,7 +87,7 @@ fdr_filter <- function(msnid,
 }
 
 
-#' Remove decoys
+#' Remove decoys from an msnid object
 #'
 #' Filtering decoys from an msnid object AFTER the FDR filter has been applied.
 #'
@@ -121,4 +121,76 @@ decoy_filter <- function(msnid) {
 
   return(filtApplied)
 
+}
+
+
+#' Filter msnid by an ascore
+#' 
+#' Requires an extra ascore_file that can be pulled with get_Ascore. Any NA AScores
+#' are maintained. 
+#' 
+#' @param msnid (MSnID object) collated MSGF output. Required.
+#' @param ascore_file (data.frame) Add an AScore file to filter phosphoproteomics data by uploading
+#'     this data.frame. Default is NULL.  
+#' @param ascore_threshold (numeric) If phosphoproteomics, filter by an AScore threshold.
+#'     Default is 17, see [here](https://www.nature.com/articles/nbt1240)
+#' @return (MSnID object) Filtered MSGF output
+#' 
+#' @importFrom dplyr %>%
+#' 
+#' @export
+ascore_filter <- function(msnid, 
+                          ascore_file,
+                          ascore_threshold = 17) {
+  
+  ####################
+  ## INPUT CHECKING ##
+  ####################
+  
+  # Input should be msnid object
+  if (!inherits(msnid, "MSnID")) {
+    stop("msnid should be a MSnID object.")
+  }
+  
+  # ascore needs to be a data.frame
+  if (!inherits(ascore_file, "data.frame")) {
+    stop("ascore_file should be a data.frame")
+  }
+  
+  # ascore needs the spectrumFile, Scan, OriginalSequence, and AScore columns 
+  if (!all(c("spectrumFile", "Scan", "OriginalSequence", "AScore") %in% colnames(ascore_file))) {
+    stop("ascore_file requires the spectrumFile, Scan, peptide, and AScore columns.")
+  }
+  
+  # ascore_threshold should be a single numeric value
+  if (length(ascore_threshold) != 1 || !is.numeric(ascore_threshold)) {
+    stop("ascore_threshold should be a single numeric value.")
+  }
+  
+  ################
+  ## RUN FILTER ##
+  ################
+  
+  # Pull relevant columns 
+  ascore <- ascore_file %>%
+    dplyr::select(spectrumFile, Scan, OriginalSequence, AScore) %>%
+    dplyr::rename(peptide = OriginalSequence)
+  
+  # Combine and filter 
+  filtered <- msnid@psms %>%
+    dplyr::left_join(ascore, by = c("spectrumFile", "Scan", "peptide")) %>%
+    dplyr::filter(AScore >= ascore_threshold)
+  
+  ###################
+  ## RETURN RESULT ##
+  ###################
+  
+  # Update msnid 
+  msnid@psms <- filtered
+  
+  # Add TMTPipeline attributes
+  attr(msnid, "TMTPipeline")$AScore_Filtered <- TRUE
+
+  return(msnid)
+  
 }
