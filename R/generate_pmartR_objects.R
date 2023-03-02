@@ -262,11 +262,6 @@ create_e_objects_unlabeled <- function(masic,
     stop("Run the decoy_filter on the msnid data first.")
   }
 
-  # f_data should have been created with the appropriate function
-  if (is.null(attr(f_data, "valid_f_data"))) {
-    stop("f_data should be created with create_f_data.")
-  }
-
   #############################
   ## BUILD THE E_DATA OBJECT ##
   #############################

@@ -9,7 +9,7 @@
 #'
 #' @export
 #' @export
-unlabeled_pipeline <- function(msnid,
+run_unlabeled_pipeline <- function(msnid,
                                folder_path,
                                metadata,
                                outpath = "~/Downloads/",

@@ -47,7 +47,7 @@ create_MASIC_unlabeled <- function(folder_path,
        dplyr::rename(ScanNumber = FragScanNumber, Intensity = PeakArea) %>%
        dplyr::mutate(Dataset = theFile %>% strsplit("/", fixed = T) %>% unlist() %>% tail(1) %>% gsub("_SICstats.txt", "", x = ., fixed = T)) %>%
        dplyr::relocate(Dataset) %>%
-       dplyr::filter(InterferenceScore >= 0.5)
+       dplyr::filter(InterferenceScore >= interference_score_threshold)
    })
   )
 
